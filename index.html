@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#080b10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>ROAD RUSH — Mobile Arcade Racing</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b10;font-family:Inter,Arial,sans-serif}
+body{touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+#game{position:relative;width:100%;height:100%;max-width:540px;margin:auto;overflow:hidden;background:#0d1218}
+canvas{position:absolute;pointer-events:none;display:block;inset:0;width:100%;height:100%}
+.ui{position:absolute;z-index:10;color:#fff}
+#hud{top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.stat{min-width:92px;padding:9px 12px;border:1px solid #ffffff24;border-radius:14px;background:#091018b8;backdrop-filter:blur(10px);box-shadow:0 8px 30px #0006}
+.stat small{display:block;color:#aeb9c7;font-size:10px;letter-spacing:1px}.stat b{font-size:20px}
+#levelBox{text-align:center;min-width:80px}
+#pause,#sound{border:1px solid #ffffff30;background:#0a1018cc;color:#fff;border-radius:13px;width:44px;height:40px;font-size:17px}
+#controls{pointer-events:auto;bottom:max(18px,env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:space-between;padding:0 18px}
+.ctrl{width:112px;height:70px;border:1px solid #ffffff45;border-radius:22px;background:linear-gradient(#ffffff25,#ffffff12);color:#fff;font-size:34px;box-shadow:0 10px 35px #0007;backdrop-filter:blur(10px)}
+.ctrl:active{transform:scale(.96);background:#ffffff35}
+.panel{position:absolute;z-index:20;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(180deg,#03060ab0,#03060ae8);color:#fff;text-align:center}
+.card{width:min(92%,390px);padding:30px 24px;border-radius:28px;border:1px solid #ffffff22;background:linear-gradient(145deg,#101923ee,#070b10ee);box-shadow:0 30px 100px #000b}
+.logo{font-size:46px;font-weight:1000;letter-spacing:3px;margin:0;text-shadow:0 8px 35px #00d9ff55}
+.logo span{color:#43d9ff}.tag{color:#9eabb9;margin:8px 0 24px}
+button.primary{width:100%;padding:16px;border:0;border-radius:15px;background:linear-gradient(135deg,#43d9ff,#5d7cff);color:#031018;font-weight:1000;font-size:18px;box-shadow:0 12px 35px #43d9ff35}
+button.primary:active{transform:scale(.98)}
+.row{display:flex;gap:10px;margin-top:12px}.mini{flex:1;padding:12px;border-radius:13px;border:1px solid #ffffff22;background:#ffffff10;color:#fff;font-weight:700}
+.info{display:flex;justify-content:space-around;margin:18px 0;color:#b9c5d2}.info b{display:block;color:#fff;font-size:22px}
+.hidden{display:none!important}
+#toast{position:absolute;z-index:15;top:76px;left:50%;transform:translateX(-50%);color:#fff;background:#071018dd;border:1px solid #ffffff22;padding:8px 14px;border-radius:999px;font-weight:800;opacity:0;transition:.25s}
+#toast.show{opacity:1}
+@media (max-width:360px){.ctrl{width:94px;height:62px}.stat{min-width:78px;padding:8px 9px}.stat b{font-size:17px}.logo{font-size:38px}}
+@media (min-width:700px){#game{box-shadow:0 0 80px #000}}
+.brandMark{display:flex;justify-content:center;align-items:baseline;gap:10px;font-size:48px;line-height:1;font-weight:1000;letter-spacing:3px;text-shadow:0 10px 40px #00d9ff33}
+.brandMark span{color:#fff}.brandMark strong{color:#43d9ff}
+.bestBadge{display:inline-block;margin:0 auto 22px;padding:10px 16px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff1f;color:#b9c6d4;font-size:12px;letter-spacing:.8px}
+.bestBadge b{color:#fff;font-size:17px;margin-left:6px}
+.instructions{display:flex;gap:10px;margin-top:15px}.instructions>div{flex:1;padding:12px 6px;border-radius:14px;background:#ffffff0a;border:1px solid #ffffff16;color:#aeb9c7;font-size:10px}
+.instructions span{display:block;font-size:25px;color:#fff;margin-bottom:3px}.instructions b{font-size:9px;letter-spacing:.5px}
+.tip{margin-top:14px;color:#7f8d9d;font-size:11px;line-height:1.5}
+.overIcon{width:58px;height:58px;margin:0 auto 12px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#ff3d71,#ff9d4d);color:#fff;font-size:27px;box-shadow:0 12px 40px #ff3d7130}
+.brandSmall{font-weight:1000;letter-spacing:2px;font-size:18px}.brandSmall span{color:#43d9ff}
+.gameOverTitle{font-size:34px;font-weight:1000;letter-spacing:2px;margin-top:8px}
+.results{display:flex;gap:8px;margin:20px 0}.results>div{flex:1;padding:12px 4px;border-radius:15px;background:#ffffff0b;border:1px solid #ffffff14}
+.results small{display:block;color:#8997a7;font-size:9px;letter-spacing:1px}.results b{display:block;color:#fff;font-size:22px;margin-top:4px}
+@media (max-width:360px){.brandMark{font-size:41px}.gameOverTitle{font-size:29px}}
+</style>
+</head>
+<body>
+<div id="game">
+<canvas id="c"></canvas>
+<div id="hud" class="ui">
+ <div class="stat"><small>SCORE</small><b id="score">0</b></div>
+ <div class="stat" id="levelBox"><small>LEVEL</small><b id="level">1</b></div>
+ <div class="stat"><small>HIGH SCORE</small><b id="high">0</b></div>
+ <button id="sound" aria-label="Sound">🔊</button><button id="pause" aria-label="Pause">Ⅱ</button>
+</div>
+<div id="toast" class="ui"></div>
+<div id="controls" class="ui">
+ <button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button>
+</div>
+
+<section id="startPanel" class="panel">
+ <div class="card">
+  <div class="brandMark"><span>ROAD</span><strong>RUSH</strong></div>
+  <div class="tag">NEON HIGHWAY • ARCADE RACING</div>
+  <div class="bestBadge">🏆 BEST SCORE <b id="startHigh">0</b></div>
+  <button class="primary" id="start">▶ PLAY</button>
+  <div class="instructions">
+   <div><span>◀</span><b>STEER LEFT</b></div>
+   <div><span>▶</span><b>STEER RIGHT</b></div>
+  </div>
+  <div class="tip">Touch the buttons to dodge traffic.<br>Survive longer to reach higher levels.</div>
+ </div>
+</section>
+
+<section id="overPanel" class="panel hidden">
+ <div class="card">
+  <div class="overIcon">✦</div>
+  <div class="brandSmall">ROAD <span>RUSH</span></div>
+  <div class="gameOverTitle">GAME OVER</div>
+  <div class="tag">The highway wins this round.</div>
+  <div class="results">
+   <div><small>SCORE</small><b id="finalScore">0</b></div>
+   <div><small>LEVEL</small><b id="finalLevel">1</b></div>
+   <div><small>BEST</small><b id="finalHigh">0</b></div>
+  </div>
+  <button class="primary" id="restart">↻ REPLAY</button>
+  <div class="tip">Try again and beat your best score.</div>
+ </div>
+</section>
+
+<section id="pausePanel" class="panel hidden">
+ <div class="card"><div class="logo" style="font-size:36px">PAUSED</div><div class="tag">Take a breath. The road is waiting.</div><button class="primary" id="resume">RESUME RACE</button></div>
+</section>
+</div>
+<script>
+(()=>{
+const c=document.getElementById('c'),ctx=c.getContext('2d'),game=document.getElementById('game');
+let dpr=1,W=0,H=0,raf=0,last=0,running=false,paused=false,muted=false;
+let score=0,level=1,high=+localStorage.getItem('roadRushHigh')||0,speed=5,spawn=0,steer=0;
+let player={x:.5,y:0.82,w:40,h:72}, cars=[], particles=[];
+const $=id=>document.getElementById(id);
+$('high').textContent=high;$('startHigh').textContent=high;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=game.clientWidth;H=game.clientHeight;c.width=W*dpr;c.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);player.y=.82}
+addEventListener('resize',resize);resize();
+
+function beep(freq,dur=.08,type='sine'){if(muted)return;try{let A=beep.ctx||(beep.ctx=new AudioContext),o=A.createOscillator(),g=A.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.035,A.currentTime);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+dur);o.connect(g);g.connect(A.destination);o.start();o.stop(A.currentTime+dur)}catch(e){}}
+function roadX(){return W*.12} function roadW(){return W*.76}
+function laneX(l){return roadX()+roadW()*((l+.5)/3)}
+function drawRoad(t){
+ ctx.fillStyle='#071016';ctx.fillRect(0,0,W,H);
+ let grd=ctx.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#152c20');grd.addColorStop(1,'#07130d');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#11161c';ctx.fillRect(roadX(),0,roadW(),H);
+ ctx.fillStyle='#d8d5c8';ctx.fillRect(roadX()-5,0,5,H);ctx.fillRect(roadX()+roadW(),0,5,H);
+ ctx.fillStyle='#2a3138';ctx.fillRect(roadX()+6,0,roadW()-12,H);
+ const off=(t*speed*.08)%90;
+ ctx.fillStyle='#f6f7f8';
+ for(let l=1;l<3;l++)for(let y=-90+off;y<H;y+=90)ctx.roundRect(roadX()+roadW()*l/3-3,y,6,42,3),ctx.fill();
+ // roadside lights
+ for(let y=-40+off*.7;y<H;y+=80){for(const x of [roadX()-18,roadX()+roadW()+18]){ctx.fillStyle='#5de7ff';ctx.shadowBlur=14;ctx.shadowColor='#5de7ff';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}}
+}
+function car(x,y,color,scale=1,playerCar=false){
+ let w=player.w*scale,h=player.h*scale,px=x*W,py=y;
+ ctx.save();ctx.translate(px,py);ctx.shadowColor=playerCar?'#00d9ff':'#000';ctx.shadowBlur=playerCar?18:8;
+ let g=ctx.createLinearGradient(-w/2,0,w/2,0);g.addColorStop(0,color[0]);g.addColorStop(.5,color[1]);g.addColorStop(1,color[0]);
+ ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,10);ctx.fill();ctx.shadowBlur=0;
+ ctx.fillStyle='#101820';ctx.beginPath();ctx.roundRect(-w*.32,-h*.27,w*.64,h*.25,7);ctx.fill();
+ ctx.fillStyle='#a9efff';ctx.globalAlpha=.8;ctx.beginPath();ctx.roundRect(-w*.25,-h*.23,w*.5,h*.12,4);ctx.fill();ctx.globalAlpha=1;
+ ctx.fillStyle='#080b0e';for(const sx of [-w/2-2,w/2-3]){ctx.fillRect(sx,-h*.25,5,h*.2);ctx.fillRect(sx,h*.05,5,h*.2)}
+ ctx.fillStyle=playerCar?'#fff':'#ff3434';ctx.beginPath();ctx.roundRect(-w*.28,h*.26,w*.56,5,2);ctx.fill();
+ ctx.restore();
+}
+const colors=[['#ff3d71','#ff8a5c'],['#4e8cff','#64d8ff'],['#b34cff','#ff67c8'],['#00b894','#54f6c5'],['#ffb300','#fff176']];
+function spawnCar(){let lane=Math.floor(Math.random()*3);cars.push({lane,y:-90-Math.random()*80,s:1+(Math.random()*.1),speed:speed*(.82+Math.random()*.25),color:colors[Math.floor(Math.random()*colors.length)]})}
+function collision(a,b){let ax=a.x*W,ay=a.y*H,bx=laneX(b.lane),by=b.y;return Math.abs(ax-bx)<30&&Math.abs(ay-by)<52}
+function reset(){cars=[];particles=[];score=0;level=1;speed=5;spawn=0;player.x=.5;$('score').textContent=0;$('level').textContent=1}
+function startGame(){reset();running=true;paused=false;$('startPanel').classList.add('hidden');$('overPanel').classList.add('hidden');$('pausePanel').classList.add('hidden');$('pause').textContent='Ⅱ';last=performance.now();beep(650,.1,'triangle');raf=requestAnimationFrame(loop)}
+function gameOver(){running=false;if(score>high){high=Math.floor(score);localStorage.setItem('roadRushHigh',high)}$('high').textContent=high;$('finalScore').textContent=Math.floor(score);$('finalLevel').textContent=level;$('finalHigh').textContent=high;$('overPanel').classList.remove('hidden');beep(90,.25,'sawtooth');navigator.vibrate?.(160)}
+function togglePause(){if(!running)return;paused=!paused;$('pausePanel').classList.toggle('hidden',!paused);$('pause').textContent=paused?'▶':'Ⅱ';if(!paused){last=performance.now();raf=requestAnimationFrame(loop)}}
+function loop(t){if(!running||paused)return;let dt=Math.min(32,t-last);last=t;score+=dt*.015;let nl=1+Math.floor(score/120);if(nl!==level){level=nl;speed=5+(level-1)*.72; $('level').textContent=level;toast('LEVEL '+level);beep(700,.07,'square')}
+spawn+=dt;let interval=Math.max(300,820-level*48);if(spawn>interval){spawnCar();spawn=0}
+player.x+=steer*dt*.00042;player.x=Math.max(.18,Math.min(.82,player.x));
+drawRoad(t);
+for(let i=cars.length-1;i>=0;i--){let q=cars[i];q.y+=q.speed*dt/16.67;car(laneX(q.lane)/W,q.y,q.color,q.s,false);if(collision(player,q)){gameOver();return}if(q.y>H+100)cars.splice(i,1)}
+car(player.x,player.y*H,['#00c6ff','#6cf5ff'],1,true);
+for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;ctx.globalAlpha=Math.max(0,p.life/400);ctx.fillStyle='#62eaff';ctx.fillRect(p.x,p.y,3,3);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
+$('score').textContent=Math.floor(score);raf=requestAnimationFrame(loop)}
+function toast(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('show'),900)}
+function press(dir){steer=dir;beep(260,.035,'square')}function release(dir){if(steer===dir)steer=0}
+[['pointerdown',-1],['touchstart',-1]].forEach(([ev,d])=>$('left').addEventListener(ev,e=>{e.preventDefault();press(d)},{passive:false}));
+[['pointerdown',1],['touchstart',1]].forEach(([ev,d])=>$('right').addEventListener(ev,e=>{e.preventDefault();press(d)},{passive:false}));
+['pointerup','pointercancel','touchend','touchcancel'].forEach(ev=>{$('left').addEventListener(ev,()=>release(-1));$('right').addEventListener(ev,()=>release(1))});
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')steer=-1;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')steer=1;if(e.key===' ')togglePause()});
+addEventListener('keyup',e=>{if((e.key==='ArrowLeft'||e.key.toLowerCase()==='a')&&steer<0)steer=0;if((e.key==='ArrowRight'||e.key.toLowerCase()==='d')&&steer>0)steer=0});
+$('start').onclick=startGame;$('restart').onclick=startGame;$('pause').onclick=togglePause;$('resume').onclick=togglePause;
+$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'🔇':'🔊';if(!muted)beep(600,.06)}
+})();
+</script>
+</body>
+</html>
